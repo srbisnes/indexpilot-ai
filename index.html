@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>IndexPilot AI — Portfolios on-chain para el ecosistema Solana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08060F;
+    --bg-raised:#0D0A18;
+    --surface:#120E1F;
+    --surface-2:#171128;
+    --border:#241C38;
+    --border-soft:#1A1428;
+    --purple:#9945FF;
+    --purple-soft:#B788FF;
+    --green:#14F195;
+    --text:#F1EEFA;
+    --text-muted:#948CAF;
+    --text-dim:#5C5578;
+    --red:#FF5C7A;
+    --amber:#FFC24B;
+    --radius:10px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+    --display: 'Space Grotesk', var(--sans);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5;}
+  ::selection{background:var(--purple); color:#fff;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border); border-radius:4px;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  .app{display:flex; min-height:100vh; flex-direction:column;}
+  /* ---------- HEADER ---------- */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 22px; border-bottom:1px solid var(--border-soft);
+    background:linear-gradient(180deg, rgba(153,69,255,0.06), transparent);
+    flex-wrap:wrap; gap:12px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:30px; height:30px; border-radius:8px;
+    background:linear-gradient(135deg, var(--purple), var(--green));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:700; font-size:14px; color:#08060F;
+    flex-shrink:0;
+  }
+  .brand-name{font-family:var(--display); font-weight:600; font-size:16.5px; letter-spacing:-0.01em;}
+  .brand-sub{font-size:11px; color:var(--text-muted); font-family:var(--mono);}
+  .net-badge{
+    display:flex; align-items:center; gap:6px; font-size:11.5px; font-family:var(--mono);
+    color:var(--green); background:rgba(20,241,149,0.08); border:1px solid rgba(20,241,149,0.25);
+    padding:5px 10px; border-radius:20px;
+  }
+  .net-dot{width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green);}
+  .top-right{display:flex; align-items:center; gap:10px;}
+  .btn{
+    border:1px solid var(--border); background:var(--surface); color:var(--text);
+    padding:8px 14px; border-radius:8px; font-size:13px; font-weight:500;
+    transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--purple-soft); background:var(--surface-2);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--purple), #7A2FE0); border:none; color:#fff; font-weight:600;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-primary:disabled{opacity:.5; cursor:not-allowed; filter:none;}
+  .btn-ghost{background:transparent; border:1px solid var(--border);}
+  .btn-sm{padding:6px 10px; font-size:12px;}
+  .wallet-chip{
+    font-family:var(--mono); font-size:12px; background:var(--surface); border:1px solid var(--border);
+    padding:7px 12px; border-radius:8px; display:flex; align-items:center; gap:8px;
+  }
+  .wallet-chip .dot{width:6px; height:6px; border-radius:50%; background:var(--green);}
+  /* ---------- LAYOUT ---------- */
+  .layout{display:flex; flex:1; min-height:0;}
+  aside.rail{
+    width:320px; flex-shrink:0; border-right:1px solid var(--border-soft);
+    padding:20px; display:flex; flex-direction:column; gap:20px;
+    background:var(--bg-raised); overflow-y:auto;
+  }
+  main.content{flex:1; padding:22px; overflow-y:auto; min-width:0;}
+  .rail-section{display:flex; flex-direction:column; gap:9px;}
+  .rail-label{
+    font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); font-weight:600;
+  }
+  textarea, input[type=text], input[type=number]{
+    width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:10px 12px; font-family:var(--sans); font-size:13.5px; resize:none;
+  }
+  textarea:focus, input:focus{outline:none; border-color:var(--purple-soft);}
+  textarea{min-height:84px; line-height:1.45;}
+  .capital-input-wrap{position:relative;}
+  .capital-input-wrap span{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-family:var(--mono); font-size:13px;
+  }
+  .capital-input-wrap input{padding-left:26px; font-family:var(--mono);}
+  .preset-list{display:flex; flex-direction:column; gap:6px;}
+  .preset-btn{
+    text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:9px 11px; font-size:12.5px; color:var(--text); display:flex; flex-direction:column; gap:2px;
+  }
+  .preset-btn:hover{border-color:var(--purple-soft);}
+  .preset-btn b{font-size:12.5px; font-weight:600;}
+  .preset-btn span{color:var(--text-muted); font-size:11px;}
+  .mode-toggle{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+  .mode-toggle button{
+    flex:1; background:var(--surface); border:none; color:var(--text-muted); padding:8px; font-size:12.5px; font-weight:600;
+  }
+  .mode-toggle button.active{background:var(--purple); color:#fff;}
+  .divider{height:1px; background:var(--border-soft); margin:2px 0;}
+  .footer-disclaimer{
+    font-size:11px; color:var(--text-dim); border-top:1px solid var(--border-soft); padding-top:14px; line-height:1.6;
+  }
+  .footer-disclaimer b{color:var(--text-muted);}
+  /* ---------- CONTENT: EMPTY STATE ---------- */
+  .empty-state{
+    height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    color:var(--text-muted); gap:10px; padding:40px;
+  }
+  .empty-state h2{font-family:var(--display); font-size:20px; color:var(--text); font-weight:600;}
+  .empty-state p{max-width:420px; font-size:13px;}
+  /* ---------- PORTFOLIO HEADER ---------- */
+  .portfolio-head{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;}
+  .portfolio-title{font-family:var(--display); font-size:21px; font-weight:600; letter-spacing:-0.01em;}
+  .portfolio-desc{color:var(--text-muted); font-size:13px; margin-top:4px; max-width:560px;}
+  .stat-strip{display:flex; gap:22px; flex-wrap:wrap;}
+  .stat{display:flex; flex-direction:column; gap:2px;}
+  .stat .v{font-family:var(--mono); font-size:17px; font-weight:600;}
+  .stat .l{font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em;}
+  .demo-tag{
+    font-size:10px; font-family:var(--mono); color:var(--amber); border:1px solid rgba(255,194,75,0.35);
+    background:rgba(255,194,75,0.08); padding:2px 7px; border-radius:5px; letter-spacing:.03em;
+  }
+  /* ---------- TABLE ---------- */
+  .panel{
+    background:var(--surface); border:1px solid var(--border-soft); border-radius:var(--radius);
+    padding:16px; margin-bottom:16px;
+  }
+  .panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; flex-wrap:wrap;}
+  .panel-title{font-family:var(--display); font-size:14.5px; font-weight:600;}
+  table{width:100%; border-collapse:collapse;}
+  th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-dim);
+    padding:8px 10px; border-bottom:1px solid var(--border-soft); font-weight:600;
+  }
+  td{padding:10px; border-bottom:1px solid var(--border-soft); font-size:13px; vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .asset-cell{display:flex; align-items:center; gap:9px;}
+  .asset-icon{
+    width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:700; font-family:var(--mono); flex-shrink:0; color:#08060F;
+  }
+  .asset-name{font-size:11.5px; color:var(--text-muted);}
+  .type-pill{
+    font-size:9.5px; padding:2px 6px; border-radius:4px; font-family:var(--mono); text-transform:uppercase;
+  }
+  .type-crypto{background:rgba(153,69,255,0.15); color:var(--purple-soft);}
+  .type-xstock{background:rgba(20,241,149,0.12); color:var(--green);}
+  .mono{font-family:var(--mono);}
+  .pos{color:var(--green);}
+  .neg{color:var(--red);}
+  .bar-track{width:70px; height:5px; background:var(--border-soft); border-radius:3px; overflow:hidden; display:inline-block; margin-right:8px; vertical-align:middle;}
+  .bar-fill{height:100%; background:linear-gradient(90deg, var(--purple), var(--green));}
+  /* ---------- CHARTS TABS ---------- */
+  .chart-tabs{display:flex; gap:4px; flex-wrap:wrap; margin-bottom:12px;}
+  .chart-tab{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:7px; padding:6px 11px;
+    font-size:12px; color:var(--text-muted); font-weight:500;
+  }
+  .chart-tab.active{background:var(--purple); border-color:var(--purple); color:#fff;}
+  .chart-symbol-picker{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;}
+  .sym-chip{
+    font-family:var(--mono); font-size:11.5px; background:var(--surface-2); border:1px solid var(--border);
+    padding:5px 9px; border-radius:6px; color:var(--text-muted);
+  }
+  .sym-chip.active{border-color:var(--green); color:var(--green); background:rgba(20,241,149,0.08);}
+  canvas{width:100%; display:block; border-radius:8px;}
+  .chart-wrap{position:relative;}
+  .chart-legend{display:flex; gap:14px; font-size:11px; color:var(--text-muted); margin-top:8px; flex-wrap:wrap;}
+  .chart-legend span{display:flex; align-items:center; gap:5px;}
+  .legend-dot{width:8px; height:8px; border-radius:2px;}
+  /* ---------- AI READ ---------- */
+  .ai-read{
+    background:linear-gradient(135deg, rgba(153,69,255,0.06), rgba(20,241,149,0.04));
+    border:1px solid rgba(153,69,255,0.25); border-radius:var(--radius); padding:16px 18px;
+  }
+  .ai-read-head{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+  .ai-icon{
+    width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,var(--purple),var(--green));
+    display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0;
+  }
+  .ai-read p{font-size:13px; line-height:1.65; color:var(--text);}
+  .ai-read p + p{margin-top:8px;}
+  /* ---------- EXECUTION MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(4,3,10,0.75); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:16px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; max-width:520px; width:100%;
+    max-height:86vh; overflow-y:auto; padding:22px;
+  }
+  .modal h3{font-family:var(--display); font-size:17px; margin-bottom:4px;}
+  .modal .sub{color:var(--text-muted); font-size:12.5px; margin-bottom:16px;}
+  .route-step{
+    display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:12.5px;
+  }
+  .route-step:last-child{border-bottom:none;}
+  .route-step .l{color:var(--text-muted);}
+  .route-step .r{font-family:var(--mono);}
+  .warn-box{
+    background:rgba(255,194,75,0.08); border:1px solid rgba(255,194,75,0.3); border-radius:8px;
+    padding:11px 13px; font-size:12px; color:var(--amber); margin:14px 0; line-height:1.55;
+  }
+  .sig-box{
+    font-family:var(--mono); font-size:11px; background:var(--bg); border:1px solid var(--border);
+    border-radius:8px; padding:11px; word-break:break-all; color:var(--green); margin-top:12px; display:none;
+  }
+  .modal-actions{display:flex; gap:8px; margin-top:16px;}
+  .modal-actions button{flex:1;}
+  @media (max-width: 880px){
+    .layout{flex-direction:column;}
+    aside.rail{width:100%; border-right:none; border-bottom:1px solid var(--border-soft); max-height:none;}
+    main.content{padding:16px;}
+    .stat-strip{gap:14px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark">IP</div>
+      <div>
+        <div class="brand-name">IndexPilot AI</div>
+        <div class="brand-sub">portfolios on-chain · Solana</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="net-badge"><span class="net-dot"></span> Solana · Modo Demo</div>
+      <button class="wallet-chip" id="walletBtn"><span class="dot"></span><span id="walletLabel">Conectar wallet</span></button>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="rail">
+      <div class="rail-section">
+        <div class="rail-label">Generar portfolio</div>
+        <textarea id="promptInput" placeholder="Ej: quiero exposición a IA y semiconductores, o &quot;dame lo mejor del ecosistema Solana&quot;"></textarea>
+      </div>
+      <div class="rail-section">
+        <div class="rail-label">Capital a asignar</div>
+        <div class="capital-input-wrap">
+          <span>$</span>
+          <input type="number" id="capitalInput" value="10000" min="10" step="10">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="generateBtn">Generar portfolio</button>
+      <div class="divider"></div>
+      <div class="rail-section">
+        <div class="rail-label">Presets</div>
+        <div class="preset-list" id="presetList"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="rail-section">
+        <div class="rail-label">Modo</div>
+        <div class="mode-toggle">
+          <button class="active" id="modeSimpleBtn">Simple</button>
+          <button id="modeAdvBtn">Advanced Analysis</button>
+        </div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="footer-disclaimer">
+        <b>Arquitectura no-custodial.</b> Esta demo no firma ni transmite operaciones reales. Todos los precios, velas, volumen y heatmaps mostrados son <b>DEMO DATA</b> simulada localmente — no provienen de un feed de mercado en vivo.
+      </div>
+    </aside>
+    <main class="content" id="mainContent">
+      <div class="empty-state">
+        <h2>Armá tu portfolio on-chain</h2>
+        <p>Describí qué querés ("exposición a IA", "ecosistema Solana", "memecoins de alto riesgo", "balanceado cripto + xStocks") o elegí un preset de la izquierda. IndexPilot va a asignar tu capital entre activos cripto y xStocks tokenizados en Solana.</p>
+      </div>
+    </main>
+  </div>
+</div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Preview de ejecución</h3>
+    <div class="sub">Ruta simulada vía agregador estilo Jupiter · Solana</div>
+    <div id="routeSteps"></div>
+    <div class="warn-box">
+      ⚠️ Esto es una <b>simulación</b>. No se genera ninguna transacción real, no se solicita firma de tu wallet y no se transmite nada a la red de Solana.
+    </div>
+    <div class="sig-box" id="sigBox"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalClose">Cerrar</button>
+      <button class="btn btn-primary" id="modalConfirm">Simular firma</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ============================================================
+   PRNG determinístico (para que cada símbolo tenga datos
+   "demo" estables durante la sesión en vez de random puro)
+============================================================ */
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+function seedFromString(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = Math.imul(31,h) + str.charCodeAt(i) | 0; }
+  return h;
+}
+/* ============================================================
+   UNIVERSO DE ACTIVOS
+============================================================ */
+const ASSETS = [
+  {sym:'SOL',   name:'Solana',              type:'crypto', tags:['solana','layer1','defi'],           base:178.40, color:'#9945FF'},
+  {sym:'JUP',   name:'Jupiter',             type:'crypto', tags:['solana','defi','dex'],               base:0.92,   color:'#9945FF'},
+  {sym:'JTO',   name:'Jito',                type:'crypto', tags:['solana','defi','staking'],           base:2.85,   color:'#9945FF'},
+  {sym:'PYTH',  name:'Pyth Network',        type:'crypto', tags:['solana','defi','oracle'],            base:0.31,   color:'#9945FF'},
+  {sym:'ORCA',  name:'Orca',                type:'crypto', tags:['solana','defi','dex'],               base:3.60,   color:'#9945FF'},
+  {sym:'RAY',   name:'Raydium',             type:'crypto', tags:['solana','defi','dex'],               base:4.10,   color:'#9945FF'},
+  {sym:'WIF',   name:'dogwifhat',           type:'crypto', tags:['solana','meme'],                     base:1.85,   color:'#9945FF'},
+  {sym:'BONK',  name:'Bonk',                type:'crypto', tags:['solana','meme'],                     base:0.000021,color:'#9945FF'},
+  {sym:'NVDAx', name:'NVIDIA (xStock)',     type:'xstock', tags:['tech','ai','semis','growth'],        base:132.50, color:'#14F195'},
+  {sym:'MSFTx', name:'Microsoft (xStock)',  type:'xstock', tags:['tech','ai','stable','growth'],       base:428.10, color:'#14F195'},
+  {sym:'AAPLx', name:'Apple (xStock)',      type:'xstock', tags:['tech','stable','growth'],            base:224.30, color:'#14F195'},
+  {sym:'GOOGLx',name:'Alphabet (xStock)',   type:'xstock', tags:['tech','ai','growth'],                base:172.90, color:'#14F195'},
+  {sym:'METAx', name:'Meta (xStock)',       type:'xstock', tags:['tech','ai','growth'],                base:562.00, color:'#14F195'},
+  {sym:'AMZNx', name:'Amazon (xStock)',     type:'xstock', tags:['tech','growth'],                     base:186.70, color:'#14F195'},
+  {sym:'SPYx',  name:'S&P 500 (xStock)',    type:'xstock', tags:['balanced','stable','dividend'],      base:568.20, color:'#14F195'},
+  {sym:'QQQx',  name:'Nasdaq 100 (xStock)', type:'xstock', tags:['tech','growth'],                     base:487.40, color:'#14F195'},
+  {sym:'COINx', name:'Coinbase (xStock)',   type:'xstock', tags:['tech','solana','growth'],            base:224.00, color:'#14F195'},
+];
+function findAsset(sym){ return ASSETS.find(a=>a.sym===sym); }
+/* ============================================================
+   PRESETS
+============================================================ */
+const PRESETS = [
+  {
+    name:'Solana Core',
+    desc:'Mayores protocolos nativos de Solana',
+    weights:{SOL:35, JTO:15, JUP:15, PYTH:10, ORCA:10, RAY:15}
+  },
+  {
+    name:'IA & Semis (xStocks)',
+    desc:'Exposición tokenizada a la carrera de IA',
+    weights:{NVDAx:35, MSFTx:20, GOOGLx:20, METAx:15, SPYx:10}
+  },
+  {
+    name:'Memecoin Momentum',
+    desc:'Alto riesgo, alta beta — solo cripto Solana',
+    weights:{WIF:40, BONK:35, SOL:25}
+  },
+  {
+    name:'Balanceado 60/40',
+    desc:'60% cripto Solana + 40% xStocks defensivos',
+    weights:{SOL:25, JUP:15, JTO:10, RAY:10, SPYx:20, AAPLx:10, MSFTx:10}
+  },
+];
+/* ============================================================
+   GENERADOR DE PORTFOLIO POR PROMPT
+============================================================ */
+function scorePromptCategories(text){
+  const t = text.toLowerCase();
+  const scores = {solana:0, tech:0, ai:0, semis:0, meme:0, stable:0, growth:0, dividend:0, defi:0, balanced:0};
+  const map = {
+    solana:['solana','sol ','ecosistema solana','on-chain'],
+    ai:['ia','inteligencia artificial','ai','artificial intelligence'],
+    semis:['semiconductor','semis','chips','nvidia'],
+    tech:['tech','tecnolog','nasdaq'],
+    meme:['meme','degen','riesgo alto','alto riesgo','especulativ'],
+    stable:['estable','defensiv','conservador','bajo riesgo'],
+    dividend:['dividendo','renta','ingreso pasivo'],
+    growth:['crecimiento','growth'],
+    defi:['defi','staking','yield','dex'],
+    balanced:['balancead','diversificad','mixto','60/40']
+  };
+  for(const cat in map){
+    map[cat].forEach(kw=>{ if(t.includes(kw)) scores[cat] += 1; });
+  }
+  return scores;
+}
+function generatePortfolio(promptText, capital){
+  const scores = scorePromptCategories(promptText || '');
+  const totalSignal = Object.values(scores).reduce((a,b)=>a+b,0);
+  if(scores.meme >= 1 && scores.meme >= scores.ai && scores.meme >= scores.tech){
+    return buildFromWeights(PRESETS[2].weights, capital, `Detecté intención de alto riesgo / momentum en tu prompt, así que prioricé memecoins nativos de Solana con alta beta.`);
+  }
+  if(scores.ai + scores.semis >= 1 && (scores.ai+scores.semis) >= scores.solana){
+    return buildFromWeights(PRESETS[1].weights, capital, `Tu prompt apunta a IA y semiconductores, así que concentré la asignación en xStocks tecnológicos con exposición directa a esa tesis.`);
+  }
+  if(scores.balanced >= 1 || (scores.stable>=1 && scores.solana>=1)){
+    return buildFromWeights(PRESETS[3].weights, capital, `Interpreté tu pedido como un mandato balanceado, así que mezclé núcleo cripto de Solana con xStocks defensivos.`);
+  }
+  if(scores.solana >= 1 && totalSignal <= scores.solana + scores.defi){
+    return buildFromWeights(PRESETS[0].weights, capital, `Tu foco es el ecosistema Solana, así que armé el portfolio 100% con protocolos nativos líderes por liquidez y uso real.`);
+  }
+  const scored = ASSETS.map(a=>{
+    let s = 0.4;
+    a.tags.forEach(tag=>{ if(scores[tag]) s += scores[tag]*2; });
+    if(scores.solana && (a.type==='crypto')) s += scores.solana*1.5;
+    return {...a, score:s};
+  }).sort((a,b)=>b.score-a.score).slice(0,6);
+  const totalScore = scored.reduce((sum,a)=>sum+a.score,0);
+  const weights = {};
+  scored.forEach(a=>{ weights[a.sym] = (a.score/totalScore)*100; });
+  return buildFromWeights(weights, capital, totalSignal===0
+    ? `No detecté una tesis específica en tu prompt, así que generé una canasta diversificada ponderando liquidez y relevancia dentro del universo disponible.`
+    : `Combiné las señales de tu prompt en una canasta ponderada a medida dentro del universo cripto + xStocks disponible en Solana.`);
+}
+function buildFromWeights(weights, capital, aiNote){
+  const symbols = Object.keys(weights);
+  const totalW = Object.values(weights).reduce((a,b)=>a+b,0);
+  const rows = symbols.map(sym=>{
+    const asset = findAsset(sym);
+    const pct = (weights[sym]/totalW)*100;
+    const amount = capital * (pct/100);
+    const seed = seedFromString(sym + '::change');
+    const rnd = mulberry32(seed);
+    const change24h = (rnd()*10 - 4.5);
+    const price = asset.base * (1 + (rnd()-0.5)*0.02);
+    return {
+      ...asset, pct, amount, change24h, price,
+      units: amount / price
+    };
+  }).sort((a,b)=>b.pct-a.pct);
+  return {rows, aiNote, capital};
+}
+/* ============================================================
+   ESTADO GLOBAL
+============================================================ */
+let state = {
+  mode:'simple',
+  portfolio:null,
+  chartTab:'price',
+  chartSymbol:null,
+};
+/* ============================================================
+   RENDER: PRESETS EN EL RAIL
+============================================================ */
+const presetList = document.getElementById('presetList');
+PRESETS.forEach(p=>{
+  const btn = document.createElement('button');
+  btn.className='preset-btn';
+  btn.innerHTML = `<b>${p.name}</b><span>${p.desc}</span>`;
+  btn.addEventListener('click', ()=>{
+    const capital = parseFloat(document.getElementById('capitalInput').value) || 10000;
+    document.getElementById('promptInput').value = '';
+    state.portfolio = buildFromWeights(p.weights, capital, `Preset "${p.name}" aplicado directamente — ${p.desc.toLowerCase()}.`);
+    state.chartSymbol = state.portfolio.rows[0].sym;
+    renderPortfolio();
+  });
+  presetList.appendChild(btn);
+});
+/* ============================================================
+   WALLET (simulada)
+============================================================ */
+const walletBtn = document.getElementById('walletBtn');
+const walletLabel = document.getElementById('walletLabel');
+let walletConnected = false;
+function fakeSolanaAddress(){
+  const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let s='';
+  for(let i=0;i<44;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+walletBtn.addEventListener('click', ()=>{
+  if(!walletConnected){
+    const addr = fakeSolanaAddress();
+    walletLabel.textContent = addr.slice(0,4)+'…'+addr.slice(-4)+' (demo)';
+    walletConnected = true;
+  } else {
+    walletLabel.textContent = 'Conectar wallet';
+    walletConnected = false;
+  }
+});
+/* ============================================================
+   MODO SIMPLE / ADVANCED
+============================================================ */
+document.getElementById('modeSimpleBtn').addEventListener('click', ()=>{
+  state.mode='simple';
+  document.getElementById('modeSimpleBtn').classList.add('active');
+  document.getElementById('modeAdvBtn').classList.remove('active');
+  renderPortfolio();
+});
+document.getElementById('modeAdvBtn').addEventListener('click', ()=>{
+  state.mode='advanced';
+  document.getElementById('modeAdvBtn').classList.add('active');
+  document.getElementById('modeSimpleBtn').classList.remove('active');
+  renderPortfolio();
+});
+/* ============================================================
+   GENERAR PORTFOLIO
+============================================================ */
+document.getElementById('generateBtn').addEventListener('click', ()=>{
+  const promptText = document.getElementById('promptInput').value.trim();
+  const capital = parseFloat(document.getElementById('capitalInput').value) || 0;
+  if(capital <= 0){ alert('Ingresá un capital válido.'); return; }
+  state.portfolio = generatePortfolio(promptText, capital);
+  state.chartSymbol = state.portfolio.rows[0].sym;
+  renderPortfolio();
+});
+/* ============================================================
+   AI MARKET READ
+============================================================ */
+function buildAiRead(portfolio){
+  const top = portfolio.rows[0];
+  const seed = seedFromString(top.sym + portfolio.rows.length);
+  const rnd = mulberry32(seed);
+  const vwapPos = rnd() > 0.5 ? 'por encima' : 'por debajo';
+  const volTrend = rnd() > 0.5 ? 'en expansión' : 'en contracción';
+  const zone = rnd() > 0.5 ? 'zona de acumulación' : 'zona de distribución';
+  const cryptoCount = portfolio.rows.filter(r=>r.type==='crypto').length;
+  const xstockCount = portfolio.rows.filter(r=>r.type==='xstock').length;
+  return `
+    <p>${portfolio.aiNote}</p>
+    <p><b>${top.sym}</b> concentra la mayor asignación (${top.pct.toFixed(1)}%). En el gráfico DEMO, el precio opera ${vwapPos} de su VWAP de sesión, con volumen ${volTrend} — patrón compatible con una ${zone} en el heatmap de liquidez simulado.</p>
+    <p>La canasta combina ${cryptoCount} activo${cryptoCount!==1?'s':''} cripto nativo${cryptoCount!==1?'s':''} de Solana y ${xstockCount} xStock${xstockCount!==1?'s':''} tokenizado${xstockCount!==1?'s':''}, buscando correlación cruzada entre el ecosistema on-chain y el mercado tradicional replicado on-chain.</p>
+  `;
+}
+/* ============================================================
+   RENDER PRINCIPAL DEL PORTFOLIO
+============================================================ */
+function fmtUSD(n){
+  return n.toLocaleString('en-US', {style:'currency', currency:'USD', maximumFractionDigits: n<1?4:2});
+}
+function fmtPct(n){
+  return (n>=0?'+':'') + n.toFixed(2) + '%';
+}
+function renderPortfolio(){
+  const main = document.getElementById('mainContent');
+  const p = state.portfolio;
+  if(!p){ return; }
+  const totalCapital = p.capital;
+  const weightedChange = p.rows.reduce((sum,r)=> sum + (r.change24h * (r.pct/100)), 0);
+  main.innerHTML = `
+    <div class="portfolio-head">
+      <div>
+        <div class="portfolio-title">Tu portfolio generado</div>
+        <div class="portfolio-desc">${p.rows.length} activos · ejecución simulada vía agregador on-chain en Solana <span class="demo-tag">DEMO DATA</span></div>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="v mono">${fmtUSD(totalCapital)}</div><div class="l">Capital</div></div>
+        <div class="stat"><div class="v mono ${weightedChange>=0?'pos':'neg'}">${fmtPct(weightedChange)}</div><div class="l">24h (ponderado)</div></div>
+        <div class="stat"><div class="v mono">${p.rows.length}</div><div class="l">Activos</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Asignación</div>
+        <button class="btn btn-primary btn-sm" id="execBtn">Preview de ejecución</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Activo</th><th>Tipo</th><th>Asignación</th><th>Monto</th><th>Precio</th><th>Unidades</th><th>24h</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${p.rows.map(r=>`
+            <tr>
+              <td>
+                <div class="asset-cell">
+                  <div class="asset-icon" style="background:${r.color}">${r.sym.slice(0,2)}</div>
+                  <div>
+                    <div><b>${r.sym}</b></div>
+                    <div class="asset-name">${r.name}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="type-pill ${r.type==='crypto'?'type-crypto':'type-xstock'}">${r.type==='crypto'?'Crypto':'xStock'}</span></td>
+              <td><span class="bar-track"><span class="bar-fill" style="width:${Math.min(r.pct,100)}%"></span></span><span class="mono">${r.pct.toFixed(1)}%</span></td>
+              <td class="mono">${fmtUSD(r.amount)}</td>
+              <td class="mono">${fmtUSD(r.price)}</td>
+              <td class="mono">${r.units.toFixed(r.price<1?0:3)}</td>
+              <td class="mono ${r.change24h>=0?'pos':'neg'}">${fmtPct(r.change24h)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel ai-read">
+      <div class="ai-read-head">
+        <div class="ai-icon">🧠</div>
+        <div class="panel-title">AI Market Read <span class="demo-tag" style="margin-left:8px;">DEMO DATA</span></div>
+      </div>
+      ${buildAiRead(p)}
+    </div>
+    ${state.mode==='advanced' ? renderAdvancedPanel(p) : ''}
+  `;
+  document.getElementById('execBtn').addEventListener('click', ()=>openExecModal(p));
+  if(state.mode==='advanced'){
+    setupAdvancedInteractions(p);
+    drawChart(state.chartSymbol, state.chartTab);
+  }
+}
+/* ============================================================
+   PANEL ADVANCED
+============================================================ */
+function renderAdvancedPanel(p){
+  return `
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Advanced Analysis <span class="demo-tag" style="margin-left:8px;">DEMO DATA</span></div>
+      </div>
+      <div class="chart-symbol-picker" id="symPicker">
+        ${p.rows.map(r=>`<button class="sym-chip ${r.sym===state.chartSymbol?'active':''}" data-sym="${r.sym}">${r.sym}</button>`).join('')}
+      </div>
+      <div class="chart-tabs" id="chartTabs">
+        ${
+          [
+          ['price','Price Action'],['vwap','VWAP'],['volume','Volume'],
+          ['heatmap','Liquidity Heatmap'],['footprint','Footprint / Delta'],['profile','Volume Profile']
+        ].map(([k,label])=>`<button class="chart-tab ${state.chartTab===k?'active':''}" data-tab="${k}">${label}</button>`).join('')}
+      </div>
+      <div class="chart-wrap">
+        <canvas id="mainCanvas" width="1000" height="360"></canvas>
+      </div>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+  `;
+}
+function setupAdvancedInteractions(p){
+  document.querySelectorAll('#symPicker .sym-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.chartSymbol = btn.dataset.sym;
+      document.querySelectorAll('#symPicker .sym-chip').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      drawChart(state.chartSymbol, state.chartTab);
+    });
+  });
+  document.querySelectorAll('#chartTabs .chart-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.chartTab = btn.dataset.tab;
+      document.querySelectorAll('#chartTabs .chart-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      drawChart(state.chartSymbol, state.chartTab);
+    });
+  });
+}
+/* ============================================================
+   GENERACIÓN DE SERIES DE DATOS SIMULADAS
+============================================================ */
+function generateSeries(symbol, n=60){
+  const asset = findAsset(symbol);
+  const rnd = mulberry32(seedFromString(symbol+'::series'));
+  let price = asset.base;
+  const candles = [];
+  for(let i=0;i<n;i++){
+    const open = price;
+    const vol = asset.base * 0.015;
+    const drift = (rnd()-0.5)*vol;
+    const close = Math.max(open + drift, asset.base*0.4);
+    const high = Math.max(open,close) + rnd()*vol*0.6;
+    const low = Math.min(open,close) - rnd()*vol*0.6;
+    const volume = 500 + rnd()*4500;
+    const buy = volume * (0.4 + rnd()*0.35);
+    const sell = volume - buy;
+    candles.push({open, close, high, low, volume, buy, sell});
+    price = close;
+  }
+  return candles;
+}
+/* ============================================================
+   DIBUJO DE CHARTS EN CANVAS
+============================================================ */
+function drawChart(symbol, tab){
+  const canvas = document.getElementById('mainCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#0D0A18';
+  ctx.fillRect(0,0,W,H);
+  const candles = generateSeries(symbol, 60);
+  const legend = document.getElementById('chartLegend');
+  legend.innerHTML = '';
+  const pad = {l:52, r:16, t:16, b:26};
+  const plotW = W - pad.l - pad.r;
+  const plotH = H - pad.t - pad.b;
+  function gridLines(minV,maxV,count=5){
+    ctx.strokeStyle = '#1A1428';
+    ctx.fillStyle = '#5C5578';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.lineWidth = 1;
+    for(let i=0;i<=count;i++){
+      const y = pad.t + plotH*(i/count);
+      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+      const val = maxV - (maxV-minV)*(i/count);
+      ctx.fillText(val<1 ? val.toFixed(4) : val.toFixed(2), 4, y+3);
+    }
+  }
+  if(tab==='price' || tab==='vwap'){
+    const highs = candles.map(c=>c.high), lows = candles.map(c=>c.low);
+    const maxV = Math.max(...highs)*1.01, minV = Math.min(...lows)*0.99;
+    gridLines(minV,maxV);
+    const cw = plotW/candles.length;
+    function y(v){ return pad.t + plotH*(1-(v-minV)/(maxV-minV)); }
+    candles.forEach((c,i)=>{
+      const x = pad.l + i*cw + cw/2;
+      const up = c.close >= c.open;
+      ctx.strokeStyle = up ? '#14F195' : '#FF5C7A';
+      ctx.fillStyle = up ? '#14F195' : '#FF5C7A';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, y(c.high)); ctx.lineTo(x, y(c.low)); ctx.stroke();
+      const bodyTop = y(Math.max(c.open,c.close));
+      const bodyBot = y(Math.min(c.open,c.close));
+      ctx.fillRect(x-cw*0.3, bodyTop, cw*0.6, Math.max(bodyBot-bodyTop,1));
+    });
+    if(tab==='vwap'){
+      let cumPV=0, cumV=0;
+      ctx.strokeStyle = '#9945FF'; ctx.lineWidth = 2; ctx.beginPath();
+      candles.forEach((c,i)=>{
+        const typical = (c.high+c.low+c.close)/3;
+        cumPV += typical*c.volume; cumV += c.volume;
+        const vwap = cumPV/cumV;
+        const x = pad.l + i*cw + cw/2;
+        if(i===0) ctx.moveTo(x,y(vwap)); else ctx.lineTo(x,y(vwap));
+      });
+      ctx.stroke();
+      legend.innerHTML = `<span><span class="legend-dot" style="background:#9945FF"></span>VWAP de sesión</span>
+        <span><span class="legend-dot" style="background:#14F195"></span>Vela alcista</span>
+        <span><span class="legend-dot" style="background:#FF5C7A"></span>Vela bajista</span>`;
+    } else {
+      legend.innerHTML = `<span><span class="legend-dot" style="background:#14F195"></span>Alcista</span>
+        <span><span class="legend-dot" style="background:#FF5C7A"></span>Bajista</span>`;
+    }
+  }
+  else if(tab==='volume'){
+    const vols = candles.map(c=>c.volume);
+    const maxV = Math.max(...vols)*1.1;
+    gridLines(0,maxV,4);
+    const cw = plotW/candles.length;
+    candles.forEach((c,i)=>{
+      const x = pad.l + i*cw;
+      const h = (c.volume/maxV)*plotH;
+      ctx.fillStyle = c.close>=c.open ? 'rgba(20,241,149,0.7)' : 'rgba(255,92,122,0.7)';
+      ctx.fillRect(x+cw*0.15, pad.t+plotH-h, cw*0.7, h);
+    });
+    legend.innerHTML = `<span><span class="legend-dot" style="background:rgba(20,241,149,0.7)"></span>Volumen en velas alcistas</span>
+      <span><span class="legend-dot" style="background:rgba(255,92,122,0.7)"></span>Volumen en velas bajistas</span>`;
+  }
+  else if(tab==='heatmap'){
+    const highs = candles.map(c=>c.high), lows = candles.map(c=>c.low);
+    const maxV = Math.max(...highs)*1.01, minV = Math.min(...lows)*0.99;
+    const rows = 24;
+    const rnd = mulberry32(seedFromString(symbol+'::heat'));
+    const cw = plotW/candles.length;
+    const rh = plotH/rows;
+    for(let i=0;i<candles.length;i++){
+      for(let r=0;r<rows;r++){
+        const priceLevel = minV + (maxV-minV)*(1-r/rows);
+        const distToClose = Math.abs(priceLevel - candles[i].close)/(maxV-minV);
+        const intensity = Math.max(0, (1-distToClose*4)) * (0.4+rnd()*0.6);
+        if(intensity>0.05){
+          ctx.fillStyle = `rgba(153,69,255,${intensity.toFixed(2)})`;
+          ctx.fillRect(pad.l+i*cw, pad.t+r*rh, cw+0.5, rh+0.5);
+        }
+      }
+    }
+    gridLines(minV,maxV);
+    legend.innerHTML = `<span><span class="legend-dot" style="background:#9945FF"></span>Intensidad de liquidez simulada por nivel de precio</span>`;
+  }
+  else if(tab==='footprint'){
+    const maxDelta = Math.max(...candles.map(c=>Math.abs(c.buy-c.sell)))*1.2;
+    const midY = pad.t + plotH/2;
+    ctx.strokeStyle = '#241C38'; ctx.beginPath(); ctx.moveTo(pad.l,midY); ctx.lineTo(W-pad.r,midY); ctx.stroke();
+    const cw = plotW/candles.length;
+    candles.forEach((c,i)=>{
+      const delta = c.buy - c.sell;
+      const h = (Math.abs(delta)/maxDelta)*(plotH/2);
+      const x = pad.l + i*cw;
+      ctx.fillStyle = delta>=0 ? 'rgba(20,241,149,0.75)' : 'rgba(255,92,122,0.75)';
+      if(delta>=0) ctx.fillRect(x+cw*0.15, midY-h, cw*0.7, h);
+      else ctx.fillRect(x+cw*0.15, midY, cw*0.7, h);
+    });
+    ctx.fillStyle = '#5C5578'; ctx.font='10px JetBrains Mono, monospace';
+    ctx.fillText('Delta +', 4, pad.t+12);
+    ctx.fillText('Delta -', 4, H-pad.b-4);
+    legend.innerHTML = `<span><span class="legend-dot" style="background:rgba(20,241,149,0.75)"></span>Delta comprador neto</span>
+      <span><span class="legend-dot" style="background:rgba(255,92,122,0.75)"></span>Delta vendedor neto</span>`;
+  }
+  else if(tab==='profile'){
+    const highs = candles.map(c=>c.high), lows = candles.map(c=>c.low);
+    const maxV = Math.max(...highs)*1.01, minV = Math.min(...lows)*0.99;
+    const bins = 30;
+    const buckets = new Array(bins).fill(0);
+    candles.forEach(c=>{
+      const mid = (c.high+c.low)/2;
+      const idx = Math.min(bins-1, Math.max(0, Math.floor(((mid-minV)/(maxV-minV))*bins)));
+      buckets[idx] += c.volume;
+    });
+    const maxBucket = Math.max(...buckets);
+    const rh = plotH/bins;
+    buckets.forEach((v,i)=>{
+      const w = (v/maxBucket)*(plotW*0.65);
+      const y = pad.t + plotH - (i+1)*rh;
+      const isPOC = v===maxBucket;
+      ctx.fillStyle = isPOC ? '#FFC24B' : 'rgba(153,69,255,0.55)';
+      ctx.fillRect(pad.l, y, w, rh*0.8);
+    });
+    gridLines(minV,maxV);
+    legend.innerHTML = `<span><span class="legend-dot" style="background:#FFC24B"></span>Point of Control (POC)</span>
+      <span><span class="legend-dot" style="background:rgba(153,69,255,0.55)"></span>Volumen por nivel de precio</span>`;
+  }
+}
+/* ============================================================
+   MODAL DE EJECUCIÓN
+============================================================ */
+const modalOverlay = document.getElementById('modalOverlay');
+function openExecModal(p){
+  const steps = document.getElementById('routeSteps');
+  const sigBox = document.getElementById('sigBox');
+  sigBox.style.display='none'; sigBox.textContent='';
+  steps.innerHTML = p.rows.map(r=>{
+    const slippage = (0.05 + Math.random()*0.4).toFixed(2);
+    return `<div class="route-step"><span class="l">Swap → ${r.sym} (${r.type==='crypto'?'ruta directa':'vault xStock'})</span><span class="r">${fmtUSD(r.amount)} · slip ${slippage}%</span></div>`;
+  }).join('') + `<div class="route-step"><span class="l">Fee de red estimado (Solana)</span><span class="r">~0.00021 SOL</span></div>`;
+  modalOverlay.classList.add('show');
+}
+document.getElementById('modalClose').addEventListener('click', ()=> modalOverlay.classList.remove('show'));
+modalOverlay.addEventListener('click', (e)=>{ if(e.target===modalOverlay) modalOverlay.classList.remove('show'); });
+document.getElementById('modalConfirm').addEventListener('click', ()=>{
+  const sigBox = document.getElementById('sigBox');
+  const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let sig=''; for(let i=0;i<88;i++) sig += chars[Math.floor(Math.random()*chars.length)];
+  sigBox.style.display='block';
+  sigBox.innerHTML = `<b style="color:#FFC24B">FIRMA SIMULADA — no transmitida a la red</b><br>${sig}`;
+});
+</script>
+</body>
+</html>
