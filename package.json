@@ -1,0 +1,27 @@
+{
+  "name": "indexpilot-ai",
+  "version": "1.0.0",
+  "description": "IndexPilot AI — Portfolios on-chain para el ecosistema Solana (demo funcional)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "start": "npx serve . -p 3000",
+    "preview": "npx serve . -p 3000"
+  },
+  "keywords": [
+    "solana",
+    "defi",
+    "portfolio",
+    "xstocks",
+    "jupiter",
+    "web3",
+    "ai",
+    "index"
+  ],
+  "author": "srbisnes",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
